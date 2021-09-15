@@ -96,7 +96,9 @@ def predict(smp_img, pre_img_ori_path, center_points, true_features, window_size
             #     continue        
             for i in range (-window_size,window_size):
                 for j in range (-window_size,window_size):
-                    mask[center_points[lm_index].y+j][center_points[lm_index].x+i] = 255
+                    p = center_points[lm_index] + Point(j,i)
+                    p.force_in_range(pre_img_alig.shape[:2][1]-1, pre_img_alig.shape[:2][0]-1)
+                    mask[p.y][p.x] = 255
 
         img_to_find_keypoint = pre_img_alig
         if(candidate_method == "keypoint_on_bin_img"):
