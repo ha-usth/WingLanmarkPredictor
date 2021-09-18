@@ -2,19 +2,19 @@
 from __future__ import print_function
 
 from numpy.core.shape_base import block
-from tables.tests.common import test_filename
+# from tables.tests.common import test_filename
 import cv2 as cv
 import numpy as np
 import argparse
 from math import cos, sqrt
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from numpy.core.fromnumeric import shape
 from skimage.feature import local_binary_pattern # # pip install scikit-image
 
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from scipy.stats import norm
-from scipy.spatial import distance
+# from scipy.spatial import distance
 import time
 import preprocess
 import glob
@@ -75,7 +75,8 @@ class Hog:
     def compute_a_point(self, img, p):        
         locations = ((p.x,p.y),)
         hist = self.hog.compute(img, self.winStride, self.padding,locations)
-        return hist.ravel().astype('float32')                
+        return hist.ravel().astype('float32')  
+                      
 class CHOG:
     def __init__(self, radius = 30, norm_scale_dis = 15, blur_size = 9, block_count = 8, bin_count = 18, pixel_distance = 1):        
         self.radius = radius        

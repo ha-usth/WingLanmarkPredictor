@@ -1,7 +1,7 @@
 import cv2 as cv
 import numpy as np
 import argparse
-from matplotlib import pyplot as plt
+# from matplotlib import pyplot as plt
 import glob
 import os
 
@@ -73,42 +73,45 @@ def align_sample_folder(input_folder, output_folder, sample_file_name):
     mask = np.zeros(smp_img.shape[:2], dtype="uint8") 
     ROI_BORDER_SIZE = 250
     mask = cv.rectangle(mask, (ROI_BORDER_SIZE,ROI_BORDER_SIZE),(smp_img.shape[1]-ROI_BORDER_SIZE, smp_img.shape[0]-ROI_BORDER_SIZE), 255, -1)
-    for file_name in glob.glob(input_folder + '*' + img_type): 
-        print("Aligning: ", file_name)
-        only_file_name =  os.path.splitext(os.path.basename(file_name))[0]
-        #if(file_name != sample_file_name):
-        pre_img = cv.imread(file_name)
-        pre_img_alig, affine = align(smp_img, pre_img, mask, mask, debug = False)        
-        cv.imwrite(output_folder + only_file_name + img_type, pre_img_alig)
+    for file_name in glob.glob(input_folder + '*' + img_type):
+        try:
+            print("Aligning: ", file_name)
+            only_file_name =  os.path.splitext(os.path.basename(file_name))[0]
+            #if(file_name != sample_file_name):
+            pre_img = cv.imread(file_name)
+            pre_img_alig, affine = align(smp_img, pre_img, mask, mask, debug = False)        
+            cv.imwrite(output_folder + only_file_name + img_type, pre_img_alig)
 
-        txt_file = os.path.splitext(file_name)[0]  + ".txt"
-        f = open(txt_file,"r")
-        lines = f.readlines()
-        index = 0 
-        features_a_sample = []
-        lms = []
-        for line in lines:
-            xy=line.split()
-            xy[0]= int(float(xy[0]))
-            xy[1]= int(float(xy[1]))
-            lm = np.array([[xy[0], xy[1]]])            
-            lms.append(lm)
-        f.close()
+            txt_file = os.path.splitext(file_name)[0]  + ".txt"
+            f = open(txt_file,"r")
+            lines = f.readlines()
+            index = 0 
+            features_a_sample = []
+            lms = []
+            for line in lines:
+                xy=line.split()
+                xy[0]= int(float(xy[0]))
+                xy[1]= int(float(xy[1]))
+                lm = np.array([[xy[0], xy[1]]])            
+                lms.append(lm)
+            f.close()
 
-        lms = np.asarray(lms)
-        lms = lms.reshape((-1,1,2))
-        lms_align = cv.transform(lms,affine)
-        #print(lms_align)
+            lms = np.asarray(lms)
+            lms = lms.reshape((-1,1,2))
+            lms_align = cv.transform(lms,affine)
+            #print(lms_align)
 
-        text_file_out = output_folder + only_file_name + ".txt"
-        f = open(text_file_out, "w")     
-        for lm in lms_align:
-            x = int(lm[0][0])
-            y = int(lm[0][1])
-            cv.drawMarker(pre_img_alig, (int(lm[0][0]),int(lm[0][1])),  color=(0, 255, 0), markerType = cv.MARKER_CROSS, markerSize = 15, thickness = 1) 
-            string_point = str(x) + " "+ str(y) + "\n"
-            f.write(string_point)
-        f.close()    
+            text_file_out = output_folder + only_file_name + ".txt"
+            f = open(text_file_out, "w")     
+            for lm in lms_align:
+                x = int(lm[0][0])
+                y = int(lm[0][1])
+                cv.drawMarker(pre_img_alig, (int(lm[0][0]),int(lm[0][1])),  color=(0, 255, 0), markerType = cv.MARKER_CROSS, markerSize = 15, thickness = 1) 
+                string_point = str(x) + " "+ str(y) + "\n"
+                f.write(string_point)
+            f.close()
+        except:
+            print("ERROR file ", file_name)
 
 # save_path = "G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\training2k_binarized\\"
 # process_path = "G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\training2k"
@@ -124,18 +127,18 @@ def align_sample_folder(input_folder, output_folder, sample_file_name):
 #     img = remove_particles(ori)    
 
 
-predict_path = "G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\predict2k"    
-save_path_aligned = "G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\predict2k_aligned\\"
+# predict_path = "G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\predict2k"    
+# save_path_aligned = "G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\predict2k_aligned\\"
 
 # img1 = cv.imread('./training_nature_fine/011.bmp',cv.IMREAD_GRAYSCALE)          # queryImage
 # img2 = cv.imread('./predict_nature/008.bmp',cv.IMREAD_GRAYSCALE) # trainImage
 # mask = np.zeros(img1.shape[:2], dtype="uint8") 
 # mask = cv.rectangle(mask, (0, 0), (img1.shape[1],img1.shape[0] - 200),255, -1)
 
-img1 = cv.imread('G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\training2k\\egfr_F_R_oly_2X_3.tif',cv.IMREAD_GRAYSCALE)          # queryImage
-# img2 = cv.imread('G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\predict2k\\star_M_R_oly_2X_86.tif',cv.IMREAD_GRAYSCALE) # trainImage
-mask = np.zeros(img1.shape[:2], dtype="uint8") 
-mask = cv.rectangle(mask, (0, 0), (img1.shape[1],img1.shape[0] - 200),255, -1)
+# img1 = cv.imread('G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\training2k\\egfr_F_R_oly_2X_3.tif',cv.IMREAD_GRAYSCALE)          # queryImage
+# # img2 = cv.imread('G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\predict2k\\star_M_R_oly_2X_86.tif',cv.IMREAD_GRAYSCALE) # trainImage
+# mask = np.zeros(img1.shape[:2], dtype="uint8") 
+# mask = cv.rectangle(mask, (0, 0), (img1.shape[1],img1.shape[0] - 200),255, -1)
 
 #img, affine = align(img1, img2, mask, mask, descriptor = cv.ORB_create(), MIN_MATCH_COUNT = 4, knn_match_ratio = 0.8, debug = False)
 
