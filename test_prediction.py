@@ -33,13 +33,17 @@ from landmark_predictor import extract_samples, predict
 #     predict(smp_img, name, center_points, true_features, window_size= WINDOW_SIZE, candidate_method = "keypoint_on_bin_img", extractor= ext, mask_roi= mask, blur_size= BLUR_SIZE, open_kernel_size = OPEN_KERNEL_SIZE, debug= False)
 
 ################################################# ds nature####################################
-chog = CHOG(radius = 30, pixel_distance= 1, block_count = 1, bin_count = 9)
+PATCH_SIZE = 60
+lbp = LocalBinaryPatterns(16,3, cell_count = 8, patchSize= PATCH_SIZE)
+# hog = Hog(winSize = (16,16), blockSize = (8, 8), blockStride=(2,2), cellSize=(4,4))
+
+# chog = CHOG(radius = 30, pixel_distance= 1, block_count = 1, bin_count = 9)
 BLUR_SIZE = 9
 OPEN_KERNEL_SIZE = (5,5)
-WINDOW_SIZE = 160
+WINDOW_SIZE = 60
 
 start_time = time.time()
-center_points, true_features = extract_samples ('../KeypointMatching/training_nature_fine_align', extractor = chog, blur_size = BLUR_SIZE )
+center_points, true_features = extract_samples ('../KeypointMatching/training_nature_fine_align', extractor = lbp, blur_size = BLUR_SIZE )
 print ("ex run time: %.2f seconds" % (time.time() - start_time))
 
 
@@ -48,8 +52,8 @@ smp_img = cv.medianBlur(smp_img, BLUR_SIZE)
 mask = np.zeros(smp_img.shape[:2], dtype="uint8") 
 ROI_BORDER_SIZE = 150
 mask = cv.rectangle(mask, (ROI_BORDER_SIZE,ROI_BORDER_SIZE),(smp_img.shape[1]-ROI_BORDER_SIZE, smp_img.shape[0]-ROI_BORDER_SIZE), 255, -1)
-
-predict (smp_img, '../KeypointMatching/predict_nature/107.bmp', center_points, true_features, window_size= WINDOW_SIZE, candidate_method = "keypoint", extractor= chog, mask_roi= mask, blur_size= BLUR_SIZE, open_kernel_size = OPEN_KERNEL_SIZE, debug= True)
+#mask = cv.rectangle(mask, (top_border,left),(smp_img.shape[1]-ROI_BORDER_SIZE, smp_img.shape[0]-ROI_BORDER_SIZE), 255, -1)
+predict (smp_img, '../KeypointMatching/predict_nature/107.bmp', center_points, true_features, window_size= WINDOW_SIZE, candidate_method = "keypoint", extractor= lbp, mask_roi= mask, blur_size= BLUR_SIZE, open_kernel_size = OPEN_KERNEL_SIZE, debug= True)
 # for name in glob.glob('../KeypointMatching/predict_nature/*.bmp'):#for each tif
 #     print("Processing ", name)
 #     predict (smp_img, name, center_points, true_features, window_size= WINDOW_SIZE, candidate_method = "keypoint", extractor= chog, mask_roi= mask, blur_size= BLUR_SIZE, open_kernel_size = OPEN_KERNEL_SIZE, debug= False)
