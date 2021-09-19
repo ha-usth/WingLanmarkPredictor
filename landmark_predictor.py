@@ -212,13 +212,14 @@ def predict(smp_img, pre_img_ori_path, center_points, true_features, window_size
 
 # def predict_folder()
 
-def predict_folder(smp_img_path, folder, center_points, true_features, window_size = 60, candidate_method = "keypoint_on_bin_img", num_random = 100, \
+def predict_folder(smp_img, folder, center_points, true_features, window_size = 60, candidate_method = "keypoint_on_bin_img", num_random = 100, \
             extractor = CHOG(), mask_roi = None,\
             valid_img_exts = [".tif",".jpg",".bmp",".png"], blur_size = 3, open_kernel_size = (5,5), debug = False):
-    print(smp_img_path)
-    smp_img = cv.imread(smp_img_path)
-    print(smp_img.shape)
-    print("window_size : ", window_size)
+    # print(smp_img_path)
+    # smp_img = cv.imread(smp_img_path)
+    # smp_img = cv.medianBlur(smp_img,blur_size)
+    # print(smp_img.shape)
+    # print("window_size : ", window_size)
     for filename in os.listdir(folder):
         ext = "." + filename.split(".")[-1]
         if ext in valid_img_exts:

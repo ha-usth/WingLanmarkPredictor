@@ -61,7 +61,7 @@ class LocalBinaryPatterns:
         # hist = hist.astype("float")
         # hist /= (hist.sum()+eps) 
         # overall_hist = np.concatenate([overall_hist, hist])
-class Hog:
+class HOG:
     def __init__(self, winSize,blockSize,blockStride,cellSize,nbins = 9):
         self.winSize = winSize
         self.blockSize = blockSize

@@ -14,7 +14,7 @@ from PyQt5.QtWidgets import QFileDialog
 import os
 from PyQt5.QtWidgets import QMessageBox
 from preprocess import align_sample_folder
-from landmark_predictor import extract_samples, predict_folder
+from landmark_predictor import extract_samples, predict, predict_folder
 from feature_extractors import *
 import threading
 import json
@@ -147,7 +147,7 @@ class Ui_iMorph(object):
         self.windowSizeValue = None
         self.numRandomValue = None
 
-        self.featureType = None
+        self.featureExtractor = None
         self.candidate_methodValue = None
 
         self.configs = None
@@ -163,7 +163,7 @@ class Ui_iMorph(object):
         self.groupBox_2.setGeometry(QtCore.QRect((10 / 1098 * width), int(390 / 790 * height), int(271 / 1098 * width), int(381 / 790 * height)))
         self.listPredict.setGeometry(QtCore.QRect((10 / 1098 * width), int(30 / 790 * height), int(241 / 1098 * width), int(301 / 790 * height)))
         self.loadPredict.setGeometry(QtCore.QRect((10 / 1098 * width), int(340 / 790 * height), int(75 / 1098 * width), int(23 / 790 * height)))
-        self.predict.setGeometry(QtCore.QRect((170 / 1098 * width), int(340 / 790 * height), int(75 / 1098 * width), int(23 / 790 * height)))
+        self.predict.setGeometry(QtCore.QRect((150 / 1098 * width), int(340 / 790 * height), int(95 / 1098 * width), int(23 / 790 * height)))
         self.groupBox_3.setGeometry(QtCore.QRect((300 / 1098 * width), int(10 / 790 * height), int(781 / 1098 * width), int(251 / 790 * height)))
         self.groupBox_4.setGeometry(QtCore.QRect((30 / 1098 * width), int(30 / 790 * height), int(721 / 1098 * width), int(91 / 790 * height)))
         self.label.setGeometry(QtCore.QRect((20 / 1098 * width), int(30 / 790 * height), int(47 / 1098 * width), int(31 / 790 * height)))
@@ -196,9 +196,15 @@ class Ui_iMorph(object):
 
     # candidate_method = "keypoint" | "keypoint_on_bin_img" | "random" | "gaussian"
     def setUp(self):
-        self.featureTypeCom.addItem("lBP")
+        self.top.setText("0")
+        self.left.setText("0")
+        self.bottom.setText("0")
+        self.right.setText("0")
+
+        self.featureTypeCom.addItem("LBP")
         self.featureTypeCom.addItem("HOG")
         self.featureTypeCom.addItem("CHOG")
+        self.featureTypeCom.setCurrentIndex(2)
 
         self.candidateCom.addItem("keypoint")
         self.candidateCom.addItem("keypoint_on_bin_img")
@@ -269,35 +275,6 @@ class Ui_iMorph(object):
                 self.showDialog("ERROR", "Lỗi xảy ra trong lúc đọc file config")
                 return False
 
-    def predicting(self):
-        if self.folder_predict is None:
-            self.showDialog("ERROR", "Bạn cần chọn folder predict")
-            return
-        if self.img_select is None:
-            self.showDialog("ERROR", "Bạn cần chọn file trong list train")
-            return
-        if self.center_points is None or self.true_features is None:
-            self.showDialog("ERROR", "Bạn chưa train dữ liệu")
-            return
-        if self.center_points is None or self.true_features is None:
-            self.showDialog("ERROR", "Bạn cần train dữ liệu trước")
-            return
-        if not self.getValue():
-            return
-        else:
-            if self.topValue is not None and self.bottomValue is not None and self.leftValue is not None and self.rightValue is not None:
-                mask = (self.topValue, self.leftValue, self.bottomValue, self.rightValue)
-            else:
-                mask = None
-
-        candidate_method = str(self.candidateCom.currentText())
-        
-        self.predict.setText("Predicting..")
-        threading.Thread(target=self.runPredict, args=(self.folder_predict, mask, self.folder_train + "/" + self.img_select, self.center_points, self.true_features, candidate_method, self.featureType, self.windowSizeValue, self.numRandomValue)).start()
-
-    def runPredict(self, folder, mask, image_select, center_points, true_features, candidate_method, extractor, window_size, num_random):
-        predict_folder(smp_img_path=image_select, folder=folder, mask_roi=mask, center_points=center_points, true_features=true_features, candidate_method=candidate_method, extractor=extractor, window_size=window_size, num_random=num_random)
-        self.predict.setText("Predict")
 
     def loadFolderPredict(self):
         dialog = QFileDialog()
@@ -315,59 +292,6 @@ class Ui_iMorph(object):
                 self.length_predict += 1
                 self.model_predict_file.appendRow(item)
 
-    def training(self):
-        if self.folder_train is None:
-            self.showDialog("ERROR", "Bạn cần chọn folder train")
-            return
-        if self.imgGenarate:
-            path_folder = self.folder_train + "/gen"
-        else:
-            path_folder = self.folder_train
-        if self.configs is None:
-            self.showDialog("ERROR", "Bạn cần chưa thêm file config")
-            return
-        feature = str(self.featureTypeCom.currentText())
-        if not self.readFileConfig():
-            return
-        if feature == "lBP":
-            try:
-                numPoints = self.configs["LBP"]["numPoints"]
-                radius = self.configs["LBP"]["radius"]
-                cell_count = self.configs["LBP"]["cell_count"]
-                patchSize = self.configs["LBP"]["patchSize"]
-                self.featureType = LocalBinaryPatterns(numPoints, radius, cell_count, patchSize)
-            except:
-                self.showDialog("ERROR", "Có lỗi xảy ra khi đọc thông tin LBP")
-                return
-        elif feature == "HOG":
-            try:
-                winSize = self.configs["HOG"]["winSize"]
-                blockSize = self.configs["HOG"]["blockSize"]
-                blockStride = self.configs["HOG"]["blockStride"]
-                cellSize = self.configs["HOG"]["cellSize"]
-                nbins = self.configs["HOG"]["nbins"]
-                self.featureType = Hog(winSize = (winSize, winSize), blockSize = (blockSize, blockSize), blockStride=(blockStride, blockStride), cellSize=(cellSize,cellSize), nbins=nbins)
-            except Exception as e:
-                self.showDialog("ERROR", "Có lỗi xảy ra khi đọc thông tin HOG")
-                return
-        else:
-            try:
-                radius = self.configs["CHOG"]["radius"]
-                pixelDistance = self.configs["CHOG"]["pixelDistance"]
-                blockCount = self.configs["CHOG"]["blockCount"]
-                binCount = self.configs["CHOG"]["binCount"]
-                self.featureType = CHOG(radius, pixel_distance=pixelDistance, block_count=blockCount, bin_count=binCount)
-            except:
-                self.showDialog("ERROR", "Có lỗi xảy ra khi đọc thông tin CHOG")
-                return
-
-        self.train.setText("Training..")
-        threading.Thread(target=self.runTrain, args=(path_folder, self.featureType)).start()
-
-    def runTrain(self, path_folder, feature):
-        self.center_points, self.true_features = extract_samples(path_folder, extractor=feature)
-        self.train.setText("Train")
-    
     def choose_file(self, index):
         item = self.model_train_file.itemFromIndex(index).text()
         self.img_select = item
@@ -441,6 +365,107 @@ class Ui_iMorph(object):
         self.showCenter.setText(_translate("iMorph", "Show center point"))
         self.save.setText(_translate("iMorph", "Save"))
 
+    def training(self):
+        if self.folder_train is None:
+            self.showDialog("ERROR", "Bạn cần chọn folder train")
+            return
+        if self.imgGenarate:
+            path_folder = self.folder_train + "/gen"
+        else:
+            path_folder = self.folder_train
+        if self.configs is None:
+            self.showDialog("ERROR", "Bạn cần chưa thêm file config")
+            return
+        feature = str(self.featureTypeCom.currentText())
+        if not self.readFileConfig():
+            return
+        if feature == "LBP":
+            try:
+                numPoints = self.configs["LBP"]["numPoints"]
+                radius = self.configs["LBP"]["radius"]
+                cell_count = self.configs["LBP"]["cell_count"]
+                patchSize = self.configs["LBP"]["patchSize"]
+                self.featureExtractor = LocalBinaryPatterns(numPoints, radius, cell_count, patchSize)
+            except:
+                self.showDialog("ERROR", "Có lỗi xảy ra khi đọc thông tin LBP")
+                return
+        elif feature == "HOG":
+            try:
+                winSize = self.configs["HOG"]["winSize"]
+                blockSize = self.configs["HOG"]["blockSize"]
+                blockStride = self.configs["HOG"]["blockStride"]
+                cellSize = self.configs["HOG"]["cellSize"]
+                nbins = self.configs["HOG"]["nbins"]
+                self.featureExtractor = HOG(winSize = (winSize, winSize), blockSize = (blockSize, blockSize), blockStride=(blockStride, blockStride), cellSize=(cellSize,cellSize), nbins=nbins)
+            except Exception as e:
+                self.showDialog("ERROR", "Có lỗi xảy ra khi đọc thông tin HOG")
+                return
+        else:
+            try:
+                radius = self.configs["CHOG"]["radius"]
+                pixelDistance = self.configs["CHOG"]["pixelDistance"]
+                blockCount = self.configs["CHOG"]["blockCount"]
+                binCount = self.configs["CHOG"]["binCount"]
+                self.featureExtractor = CHOG(radius, pixel_distance=pixelDistance, block_count=blockCount, bin_count=binCount)
+            except:
+                self.showDialog("ERROR", "Có lỗi xảy ra khi đọc thông tin CHOG")
+                return
+
+        
+        threading.Thread(target=self.runTrain, args=(path_folder, self.featureExtractor)).start()
+
+    def runTrain(self, path_folder, extractor):
+        self.train.setText("Training..")
+        blur_size = self.configs["blur_size"]
+        self.center_points, self.true_features = extract_samples(path_folder, extractor=extractor, valid_img_exts = [".tif",".jpg",".bmp",".png"], blur_size = blur_size)
+        self.train.setText("Train")
+    
+    def predicting(self):
+        if self.folder_predict is None:
+            self.showDialog("ERROR", "Bạn cần chọn folder predict")
+            return
+        if self.img_select is None:
+            self.showDialog("ERROR", "Bạn cần chọn file trong list train")
+            return   
+
+        if self.center_points is None or self.true_features is None:
+            self.showDialog("ERROR", "Bạn chưa train dữ liệu")
+            return
+        if self.center_points is None or self.true_features is None:
+            self.showDialog("ERROR", "Bạn cần train dữ liệu trước")
+            return
+        if not self.getValue():
+            return
+        else:
+            smp_img = cv.imread(self.folder_train + "/" + self.img_select)
+            blur_size = self.configs["blur_size"]
+            smp_img = cv.medianBlur(smp_img,blur_size)   
+            if self.topValue is not None and self.bottomValue is not None and self.leftValue is not None and self.rightValue is not None:
+                mask = np.zeros(smp_img.shape[:2], dtype="uint8") 
+                mask = cv.rectangle(mask, (self.leftValue, self.topValue),(smp_img.shape[1]-self.rightValue, smp_img.shape[0]-self.bottomValue), 255, -1)
+                #mask = (self.topValue, self.leftValue, self.bottomValue, self.rightValue)
+            else:
+                mask = None
+
+        candidate_method = str(self.candidateCom.currentText())        
+        
+        
+        threading.Thread(target=self.runPredict, args=(smp_img, self.folder_predict, self.center_points, self.true_features,  self.windowSizeValue, \
+                    candidate_method, self.numRandomValue, self.featureExtractor, mask, [".tif",".jpg",".bmp",".png"], blur_size, (5,5))).start()
+
+    def runPredict(self, smp_img, folder,  center_points, true_features, window_size, candidate_method, num_random, extractor, mask_roi, valid_img_exts, blur_size, open_kernel_size):        
+        self.predict.setText("Predicting..")
+        count = 0
+        for filename in os.listdir(folder):
+            ext = "." + filename.split(".")[-1]
+            if ext in valid_img_exts:
+                path_file = folder + "/" + filename
+                print(path_file)
+                predict(smp_img, path_file, center_points, true_features, window_size, candidate_method, num_random, extractor, mask_roi, valid_img_exts, blur_size, open_kernel_size, debug = False )
+            count +=1
+            self.predict.setText("Predicting {}/{}".format(count, len(os.listdir(folder))))    
+        self.predict.setText("Predict")
+
 class Window(QtWidgets.QMainWindow):
     resized = QtCore.pyqtSignal()
     def  __init__(self, parent=None):
@@ -462,3 +487,4 @@ if __name__ == "__main__":
     w = Window()
     w.show()
     sys.exit(app.exec_())
+
