@@ -44,24 +44,7 @@ class LocalBinaryPatterns:
         desc = self.describe(crop)
         return desc.ravel().astype('float32')
         
-        # overall_hist_2 = []
-        # for i in range(int(cell_count/2)):
-        #     for j in range(int(cell_count/2)):
-        #         cell = lbp[cell_size*i:cell_size*(i+1), cell_size*j:cell_size*(j+1)]
-        #         hist = cv.calcHist(cell, [0], None, [self.numPoints], [0,self.numPoints],).flatten()
-        #         overall_hist_2 = np.concatenate([overall_hist_2, hist])                
-        # overall_hist_2 = overall_hist_2.astype("float")
-        # overall_hist_2 /= (overall_hist_2.sum()+eps) 
-
-        # overall_hist = np.concatenate([overall_hist, overall_hist_2])  
-        #hist = np.histogram(lbp.ravel(), bins=range(0,self.numPoints+3), range=(0,self.numPoints+2))[0]
-        
-        #print(hist)    
-        # hist = cv.calcHist([lbp], [0], None, [self.numPoints+2], [0,self.numPoints+2],).flatten()
-        # hist = hist.astype("float")
-        # hist /= (hist.sum()+eps) 
-        # overall_hist = np.concatenate([overall_hist, hist])
-class Hog:
+class HOG:
     def __init__(self, winSize,blockSize,blockStride,cellSize,nbins = 9):
         self.winSize = winSize
         self.blockSize = blockSize

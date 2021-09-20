@@ -1,4 +1,5 @@
 {
+    "blur_size": 9,
     "LBP" : {
         "numPoints" : 16,
         "radius" : 3,
@@ -6,14 +7,14 @@
         "patchSize" : 50
     },
     "HOG" : {
-        "winSize" : 50,
-        "blockSize" : 30,
+        "winSize" : 16,
+        "blockSize" : 8,
         "blockStride" : 2,
-        "cellSize" : 20,
+        "cellSize" : 4,
         "nbins" : 3
     },
     "CHOG": {
-        "radius" : 20,
+        "radius" : 30,
         "pixelDistance" : 1,
         "blockCount" : 1,
         "binCount" : 9

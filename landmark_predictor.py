@@ -3,7 +3,6 @@ from __future__ import print_function
 import glob
 import os
 import time
-from static import StaticVariable
 import cv2 as cv
 import numpy as np
 from scipy.stats import norm
@@ -24,7 +23,6 @@ def extract_samples(sample_paths, extractor = CHOG(), valid_img_exts = [".tif","
     for name in glob.glob(list_file):#for each txt file
         num_file = num_file + 1
         file_name = name[len_prefix+1:len(name)-4]
-        StaticVariable.training_size += 1
         img_sample_ori = None #
         for img_file in glob.glob(sample_paths + '/' + file_name + '.*'):
             ext = os.path.splitext(img_file)[1]
@@ -159,6 +157,8 @@ def predict(smp_img, pre_img_ori_path, center_points, true_features, window_size
             continue
         selecteds = []  # n selected correspond to n sample images
         for sample_index in range(len(true_features)):#foreach sample features images
+            if len(true_features[sample_index]) <= 0:
+                continue
             true_feature = true_features[sample_index][lm_index]                       
             best_distance = 0 # np.Infinity 
             most_like_p = None
@@ -210,13 +210,12 @@ def predict(smp_img, pre_img_ori_path, center_points, true_features, window_size
     #--------------END OF FUNCTION---------------------------------------------------------------------
 
 
-def predict_folder(smp_img_path, folder, center_points, true_features, window_size = 60, candidate_method = "keypoint_on_bin_img", num_random = 100, \
+
+# def predict_folder(smp_img_path, folder, center_points, true_features, window_size = 60, candidate_method = "keypoint_on_bin_img", num_random = 100, \
+
+def predict_folder(smp_img, folder, center_points, true_features, window_size = 60, candidate_method = "keypoint_on_bin_img", num_random = 100, \
             extractor = CHOG(), mask_roi = None,\
             valid_img_exts = [".tif",".jpg",".bmp",".png"], blur_size = 3, open_kernel_size = (5,5), debug = False):
-    print(smp_img_path)
-    smp_img = cv.imread(smp_img_path)
-    print(smp_img.shape)
-    print("window_size : ", window_size)
     for filename in os.listdir(folder):
         ext = "." + filename.split(".")[-1]
         if ext in valid_img_exts:

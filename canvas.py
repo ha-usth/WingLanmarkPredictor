@@ -50,22 +50,3 @@ class MovingObject(QGraphicsEllipseItem):
     def mouseReleaseEvent(self, event):
         self.x = self.pos().x()
         self.y = self.pos().y()
-        # print('x: {0}, y: {1}'.format(self.pos().x(), self.pos().y()))
-
-class Canvas(QWidget):
-    def __init__(self):
-        super().__init__()
-
-    def loadImage(self):
-        image_path = "C:/Users/Do Phong PC/Desktop/photo_2021-09-13_19-24-17.jpg"
-        if os.path.isfile(image_path):
-            scene = QGraphicsScene(self)
-            # scene
-            pixmap = QPixmap(image_path)
-            item = QGraphicsPixmapItem(pixmap)
-            scene.addItem(item)
-            
-            moveObject = MovingObject(30, 30, 10)
-            scene.addItem(moveObject)
-            
-            self.ui.graphicsView.setScene(scene)

@@ -3,7 +3,7 @@
 block_cipher = None
 
 
-a = Analysis(['../main.py'],
+a = Analysis(['../iMorph.py'],
              pathex=[''],
              binaries=[],
              datas=[],
@@ -23,7 +23,7 @@ exe = EXE(pyz,
           a.zipfiles,
           a.datas,
           [],
-          name='main',
+          name='iMorph',
           debug=False,
           bootloader_ignore_signals=False,
           strip=False,
