@@ -1,4 +1,4 @@
-#Hướng dẫn cách build `iMorph`
+# Hướng dẫn cách build `iMorph`
 ## Cài đặt môi trường python để build code 
 ####    `pip install -r requirements.txt`
 ## Tạo thư mục `build`
