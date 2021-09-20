@@ -12,6 +12,12 @@ class Point:
         self.y = max(self.y,0)
         self.y = min(self.y,h)
 
+    def x(self):
+        return self.x
+    
+    def y(self):
+        return self.y
+
     def __repr__(self):
         return "".join(["Point(", str(self.x), ",", str(self.y), ")"])
 

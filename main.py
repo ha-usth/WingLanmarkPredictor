@@ -164,6 +164,8 @@ class Ui_MainWindow(object):
         self.img_select = None
         self.isPreprocess = False
 
+        
+
         self.event()
         self.setup()
 

@@ -13,11 +13,15 @@ from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QSizePolicy, QApp
 from PyQt5.QtWidgets import QFileDialog
 import os
 from PyQt5.QtWidgets import QMessageBox
+import cv2
 from preprocess import align_sample_folder
 from landmark_predictor import extract_samples, predict_folder
 from feature_extractors import *
 import threading
+from PyQt5.QtGui import QPixmap
 import json
+from canvas import MovingObject
+from PyQt5.QtWidgets import QApplication, QDialog, QGraphicsScene, QGraphicsEllipseItem, QGraphicsPixmapItem
 
 class Ui_iMorph(object):
     def setupUi(self, iMorph):
@@ -115,16 +119,19 @@ class Ui_iMorph(object):
         self.numOfPoint = QtWidgets.QLineEdit(self.groupBox_3)
         self.numOfPoint.setGeometry(QtCore.QRect(530, 190, 113, 31))
         self.numOfPoint.setObjectName("numOfPoint")
-        self.viewImage = QtWidgets.QLabel(iMorph)
+        self.viewImage = QtWidgets.QGraphicsView(iMorph)
         self.viewImage.setGeometry(QtCore.QRect(300, 265, 781, 471))
-        self.viewImage.setStyleSheet("border: 1px solid black;")
-        self.viewImage.setText("")
+        self.viewImage.setSizeIncrement(QtCore.QSize(0, 0))
+        self.viewImage.setFrameShadow(QtWidgets.QFrame.Raised)
+        self.viewImage.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.AdjustToContentsOnFirstShow)
+        self.viewImage.setAlignment(QtCore.Qt.AlignJustify|QtCore.Qt.AlignVCenter)
         self.viewImage.setObjectName("viewImage")
+        self.viewImage.setStyleSheet("border: 1px solid black;")
         self.showCenter = QtWidgets.QCheckBox(iMorph)
         self.showCenter.setGeometry(QtCore.QRect(410, 750, 111, 17))
         self.showCenter.setObjectName("showCenter")
         self.save = QtWidgets.QPushButton(iMorph)
-        self.save.setGeometry(QtCore.QRect(770, 745, 81, 23))
+        self.save.setGeometry(QtCore.QRect(770, 745, 81, 30))
         self.save.setObjectName("save")
 
         self.retranslateUi(iMorph)
@@ -152,7 +159,50 @@ class Ui_iMorph(object):
 
         self.configs = None
         self.readFileConfig()
+
+        self.points = []
+        self.scale_w = None
+        self.scale_h = None
+        self.showCenterPoint = False
+
+        self.currentImageShow = None
+        self.showImageType = 0
+
+    def convert_nparray_to_QPixmap(self, img):
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
+        w,h,ch = img.shape
+        if img.ndim == 1:
+            img = cv2.cvtColor(img,cv2.COLOR_GRAY2RGB)
+
+        qimg = QtGui.QImage(img.data, h, w, 3 * h, QtGui.QImage.Format_RGB888) 
+        qpixmap = QPixmap(qimg)
+
+        return qpixmap
+
+    def drawImage(self, rgbImage, points):
+        scene = QGraphicsScene(self.viewImage)
+        w_img = rgbImage.shape[1]
+        h_img = rgbImage.shape[0]
+        w_view = int(self.viewImage.width() * 0.96)
+        h_view = int(self.viewImage.height() * 0.96)
+        self.scale_w = w_img / w_view
+        self.scale_h = h_img / h_view
+
+        rgbImage = cv2.resize(rgbImage, (w_view, h_view))
+
+        pixmap = self.convert_nparray_to_QPixmap(rgbImage)
+
+        item = QGraphicsPixmapItem(pixmap)
         
+        scene.addItem(item)
+        for point in points:
+            x, y = point
+            x = int(x / self.scale_w)
+            y = int(y / self.scale_h)
+            moveObject = MovingObject(x, y, 8)
+            self.points.append(moveObject)
+            scene.addItem(moveObject)
+        self.viewImage.setScene(scene)
 
     def resize(self, width, height):
         self.groupBox.setGeometry(QtCore.QRect(int(10 / 1098 * width),int(10 / 790 * height),int(271 / 1098 * width) ,int(361 / 790 * height) ))
@@ -184,17 +234,49 @@ class Ui_iMorph(object):
         self.numOfPoint.setGeometry(QtCore.QRect((530 / 1098 * width), int(190 / 790 * height), int(113 / 1098 * width), int(31 / 790 * height)))
         self.viewImage.setGeometry(QtCore.QRect((300 / 1098 * width), int(265 / 790 * height), int(781 / 1098 * width), int(471 / 790 * height)))
         self.showCenter.setGeometry(QtCore.QRect((410 / 1098 * width), int(750 / 790 * height), int(111 / 1098 * width), int(17 / 790 * height)))
-        self.save.setGeometry(QtCore.QRect((770 / 1098 * width), int(745 / 790 * height), int(81 / 1098 * width), int(23 / 790 * height)))
+        self.save.setGeometry(QtCore.QRect((770 / 1098 * width), int(745 / 790 * height), int(81 / 1098 * width), int(30 / 790 * height)))
 
     def event(self):
         self.loadTrain.clicked.connect(self.loadFolderTrain)
         self.listTrain.clicked[QtCore.QModelIndex].connect(self.choose_file)
+        self.listPredict.clicked[QtCore.QModelIndex].connect(self.choose_file_predict)
         self.preprocess.clicked.connect(self.preprocessing)
         self.train.clicked.connect(self.training)
         self.loadPredict.clicked.connect(self.loadFolderPredict)
         self.predict.clicked.connect(self.predicting)
+        self.showCenter.stateChanged.connect(self.changeShowCenterPoint)
+        self.save.clicked.connect(self.savePoint)
 
-    # candidate_method = "keypoint" | "keypoint_on_bin_img" | "random" | "gaussian"
+    def savePoint(self):
+        if self.currentImageShow is None:
+            return
+
+        if self.showImageType == 1:
+            folder = self.folder_train
+        elif self.showImageType == 2:
+            folder = self.folder_predict
+        else:
+            return
+
+        name = ".".join(self.currentImageShow.split(".")[0: -1])
+        path = folder + "/" + name + ".txt"
+        filesave = open(path + "w")
+        for point in self.points:
+            x, y = point.getPoint()
+            x = int(x * self.scale_w)
+            y = int(y * self.scale_h)
+            filesave.write("{0} {1}\n".format(x, y))
+        filesave.close()
+
+    def changeShowCenterPoint(self, state):
+        if state == QtCore.Qt.Checked:
+            self.showCenterPoint = True
+        else:
+            self.showCenterPoint = False
+
+        if self.showImageType == 2:
+            self.drawImagePredict(self.showCenterPoint, self.currentImageShow)
+
     def setUp(self):
         self.featureTypeCom.addItem("lBP")
         self.featureTypeCom.addItem("HOG")
@@ -371,6 +453,64 @@ class Ui_iMorph(object):
     def choose_file(self, index):
         item = self.model_train_file.itemFromIndex(index).text()
         self.img_select = item
+        self.currentImageShow = item
+        self.showImageType = 1
+        self.showImageTrain(item)
+
+    def choose_file_predict(self, index):
+        item = self.model_predict_file.itemFromIndex(index).text()
+        self.currentImageShow = item
+        self.showImageType = 2
+        self.drawImagePredict(self.showCenterPoint, item)
+
+    def drawImagePredict(self, isDrawCenterPoint, filename):
+        name = ".".join(filename.split(".")[0: -1])
+        if not os.path.isfile(self.folder_predict + "/" + name + ".txt"):
+            self.showDialog("ERROR", "File ảnh không có label")
+            return
+        lines = open(self.folder_predict + "/" + name + ".txt").read().split("\n")
+        points = []
+        for line in lines:
+            if len(line) <= 0:
+                continue
+            tokens = line.split(" ")
+            x = int(tokens[0])
+            y = int(tokens[1])
+            points.append((x, y))
+        self.windowSizeValue = 30
+        img = cv2.imread(self.folder_predict + "/" + filename)
+        if img is None:
+            self.showDialog("ERROR", "Lỗi không mở được file ảnh")
+            return
+        if isDrawCenterPoint and self.center_points is not None:
+            index = 0
+            for point in self.center_points:
+                index += 1
+                x , y = point.x , point.y
+                cv2.circle(img, (x, y), 7, (255, 0, 0), 4)
+                cv2.putText(img, str(index), (x + 10, y + 10), cv2.FONT_HERSHEY_SIMPLEX,  1, (255, 0, 0), 2, cv2.LINE_AA)
+                cv2.rectangle(img, (x - int(self.windowSizeValue), y - int(self.windowSizeValue)), (x + int(self.windowSizeValue), y + int(self.windowSizeValue)), (255, 0, 0), 2)
+        self.drawImage(img, points)
+
+    def showImageTrain(self, filename):
+        name = ".".join(filename.split(".")[0: -1])
+        if not os.path.isfile(self.folder_train + "/" + name + ".txt"):
+            self.showDialog("ERROR", "File ảnh không có label")
+            return
+        lines = open(self.folder_train + "/" + name + ".txt").read().split("\n")
+        points = []
+        for line in lines:
+            if len(line) <= 0:
+                continue
+            tokens = line.split(" ")
+            x = int(tokens[0])
+            y = int(tokens[1])
+            points.append((x, y))
+        img = cv2.imread(self.folder_train + "/" + filename)
+        if img is None:
+            self.showDialog("ERROR", "Lỗi không mở được file ảnh")
+            return
+        self.drawImage(img, points)
 
     def loadFolderTrain(self):
         dialog = QFileDialog()
