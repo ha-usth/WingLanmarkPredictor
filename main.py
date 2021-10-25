@@ -4,12 +4,12 @@ import os
 from PyQt5.QtWidgets import QMessageBox
 import threading
 import imutils
-from keypoint_matching import get_true_feature, prediction, prediction_image
+# from keypoint_matching import get_true_feature, prediction, prediction_image
 from landmark_predictor import predict, extract_samples
 from preprocess import align_sample_folder
 import cv2
 import tkinter as tk
-from static import StaticVariable
+# from static import StaticVariable
 from PyQt5.QtCore import QTimer
 import random
 from PyQt5.QtWidgets import (QApplication, QLabel, QWidget)
