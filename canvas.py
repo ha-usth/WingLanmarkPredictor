@@ -20,6 +20,7 @@ class MovingObject(QGraphicsEllipseItem):
         self.x = x
         self.y = y
         self.setAcceptHoverEvents(True)
+        self.isMove = False
     # mouse hover event    
     def hoverEnterEvent(self, event):
         pass
@@ -46,7 +47,14 @@ class MovingObject(QGraphicsEllipseItem):
 
     def getPoint(self):
         return self.x, self.y
+
+    def getIsMove(self):
+        return self.isMove
+    
+    def releaseIsMove(self):
+        self.isMove = False
     
     def mouseReleaseEvent(self, event):
         self.x = self.pos().x()
         self.y = self.pos().y()
+        self.isMove = True

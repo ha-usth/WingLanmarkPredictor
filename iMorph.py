@@ -11,6 +11,7 @@
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QWidget, QGridLayout, QPushButton, QSizePolicy, QApplication
 from PyQt5.QtWidgets import QFileDialog
+from PyQt5.QtCore import QTimer
 import os
 from PyQt5.QtWidgets import QMessageBox
 import cv2
@@ -139,6 +140,9 @@ class Ui_iMorph(object):
         self.event()
         self.setUp()
 
+        self.timerCheckDraw=QTimer()
+        self.timerCheckDraw.timeout.connect(self.reDraw)
+        self.timerCheckDraw.start(1000)
 
         self.img_select = None
         self.imgGenarate = False
@@ -167,6 +171,19 @@ class Ui_iMorph(object):
 
         self.currentImageShow = None
         self.showImageType = 0
+
+    def reDraw(self):
+        checkDraw = False
+        for point in self.points:
+            if point.getIsMove():
+                checkDraw = True
+        if checkDraw and self.currentImageShow is not None:
+            try:
+                imgBrg = cv2.imread(img = cv2.imread(self.folder_predict + "/" + self.currentImageShow))
+                repoints = self.points
+                self.drawImage(imgBrg, repoints)
+            except:
+                pass
 
     def convert_nparray_to_QPixmap(self, img):
         img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
