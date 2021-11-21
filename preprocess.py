@@ -1,13 +1,15 @@
 import cv2 as cv
 import numpy as np
 import argparse
-# from matplotlib import pyplot as plt
 import glob
 import os
 
 def remove_particles(src, min_component_size = 150, open_kernel_size = (5,5), debug = False):
-    #img = cv.medianBlur(src,3)
-    th = cv.adaptiveThreshold(src,255,cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 11,2)   
+    if len(src.shape) == 3:
+        gray = cv.cvtColor(src, cv.COLOR_BGR2GRAY)
+        th = cv.adaptiveThreshold(gray,255,cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 11,2)   
+    else:
+        th = cv.adaptiveThreshold(src,255,cv.ADAPTIVE_THRESH_MEAN_C, cv.THRESH_BINARY, 11,2)   
     inv = 255-th
 
     # cv.imshow("thres", inv)
@@ -37,9 +39,15 @@ def remove_particles(src, min_component_size = 150, open_kernel_size = (5,5), de
 
 
 #return the aligned image and affine matrix
-def align(sample_img, applied_img, sample_mask = None, aplied_mask = None, descriptor = cv.AKAZE_create(), MIN_MATCH_COUNT = 4, knn_match_ratio_thr = 0.8, debug = False):    
-    kpts1, desc1 = descriptor.detectAndCompute(sample_img, sample_mask)
-    kpts2, desc2 = descriptor.detectAndCompute(applied_img, aplied_mask)
+def align(sample_img, applied_img, sample_mask = None, aplied_mask = None, descriptor = cv.AKAZE_create(), MIN_MATCH_COUNT = 4, knn_match_ratio_thr = 0.8, use_bin_img = False, debug = False):    
+    if(use_bin_img):
+        sample_img_bin = remove_particles(sample_img)
+        applied_img_bin = remove_particles(applied_img)
+        kpts1, desc1 = descriptor.detectAndCompute(sample_img_bin, sample_mask)
+        kpts2, desc2 = descriptor.detectAndCompute(applied_img_bin, aplied_mask)
+    else:
+        kpts1, desc1 = descriptor.detectAndCompute(sample_img, sample_mask)
+        kpts2, desc2 = descriptor.detectAndCompute(applied_img, aplied_mask)
 
     matcher = cv.DescriptorMatcher_create(cv.DescriptorMatcher_BRUTEFORCE_HAMMING)
     matches = matcher.knnMatch(desc1,desc2,k=2)
@@ -52,7 +60,11 @@ def align(sample_img, applied_img, sample_mask = None, aplied_mask = None, descr
     bestmatches = sorted(singleMatches, key = lambda x:x.distance)
 
     if debug:
-        img3 = cv.drawMatches(sample_img,kpts1,applied_img,kpts2,bestmatches[0:100],None,flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS)
+        img3 = cv.drawMatches(sample_img,kpts1,applied_img,kpts2,bestmatches[0:30],None,flags=cv.DrawMatchesFlags_NOT_DRAW_SINGLE_POINTS) 
+        scale_percent = 50 # percent of original size
+        width = int(img3.shape[1] * scale_percent / 100)
+        height = int(img3.shape[0] * scale_percent / 100)
+        img3 = cv.resize(img3, (width, height), interpolation = cv.INTER_AREA)
         cv.imshow("Matching illustration", img3)
         cv.waitKey()       
 
@@ -67,19 +79,19 @@ def align(sample_img, applied_img, sample_mask = None, aplied_mask = None, descr
     return image_affined, affine    
 
 
-def align_sample_folder(input_folder, output_folder, sample_file_name):
-    smp_img = cv.imread(sample_file_name, cv.IMREAD_GRAYSCALE)
-    img_type = os.path.splitext(sample_file_name)[1]
+def align_sample_folder(input_folder, output_folder, sample_file_name, border_top = 0, border_bottom = 0, border_left = 0, border_right = 0,  use_bin_img= False):
+    smp_img = cv.imread(sample_file_name, cv.IMREAD_GRAYSCALE)   
     mask = np.zeros(smp_img.shape[:2], dtype="uint8") 
-    ROI_BORDER_SIZE = 250
-    mask = cv.rectangle(mask, (ROI_BORDER_SIZE,ROI_BORDER_SIZE),(smp_img.shape[1]-ROI_BORDER_SIZE, smp_img.shape[0]-ROI_BORDER_SIZE), 255, -1)
+    mask = cv.rectangle(mask, (border_left, border_top), (smp_img.shape[1] - border_right,smp_img.shape[0] - border_bottom),255, -1)
+
+    img_type = os.path.splitext(sample_file_name)[1] 
     for file_name in glob.glob(input_folder + '*' + img_type):
         try:
             print("Aligning: ", file_name)
             only_file_name =  os.path.splitext(os.path.basename(file_name))[0]
             #if(file_name != sample_file_name):
             pre_img = cv.imread(file_name)
-            pre_img_alig, affine = align(smp_img, pre_img, mask, mask, debug = False)        
+            pre_img_alig, affine = align(smp_img, pre_img, mask, mask, knn_match_ratio_thr= 0.85, use_bin_img= use_bin_img, debug = False)        
             cv.imwrite(output_folder + only_file_name + img_type, pre_img_alig)
 
             txt_file = os.path.splitext(file_name)[0]  + ".txt"
@@ -113,61 +125,46 @@ def align_sample_folder(input_folder, output_folder, sample_file_name):
         except:
             print("ERROR file ", file_name)
 
-# save_path = "G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\training2k_binarized\\"
-# process_path = "G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\training2k"
-
-#save_path = "G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\training_nature_binarized\\"
-#process_path = "G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\training_nature"
-
-# save_path = "G:\\My Drive\\Research\\iMorphSharedByHai\\Datasets\\Sandfly_data\\France_bin\\"
-# process_path = "G:\\My Drive\\Research\\iMorphSharedByHai\\Datasets\\Sandfly_data\France"
-
-# for file_name in glob.glob(process_path + "/*.bmp"):    
-#     ori = cv.imread(file_name,0)    
-#     img = remove_particles(ori)    
+#resize all images in a folder according to a sample file, save to output_folder, also update accompanied txt annotation files
 
 
-# predict_path = "G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\predict2k"    
-# save_path_aligned = "G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\predict2k_aligned\\"
+def resize(input_folder, output_folder, sample_file, img_type = ".tif"):
+    img_sample = cv.imread(sample_file)
+    sample_height = img_sample.shape[0]    
+    sample_width = img_sample.shape[1]  
 
-# img1 = cv.imread('./training_nature_fine/011.bmp',cv.IMREAD_GRAYSCALE)          # queryImage
-# img2 = cv.imread('./predict_nature/008.bmp',cv.IMREAD_GRAYSCALE) # trainImage
-# mask = np.zeros(img1.shape[:2], dtype="uint8") 
-# mask = cv.rectangle(mask, (0, 0), (img1.shape[1],img1.shape[0] - 200),255, -1)
+    for name in glob.glob(input_folder+"*.txt"):
+        print("processing file: ", name)
 
-# img1 = cv.imread('G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\training2k\\egfr_F_R_oly_2X_3.tif',cv.IMREAD_GRAYSCALE)          # queryImage
-# # img2 = cv.imread('G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\predict2k\\star_M_R_oly_2X_86.tif',cv.IMREAD_GRAYSCALE) # trainImage
-# mask = np.zeros(img1.shape[:2], dtype="uint8") 
-# mask = cv.rectangle(mask, (0, 0), (img1.shape[1],img1.shape[0] - 200),255, -1)
+        img_file_name = name.replace(".txt",img_type)        
+        img = cv.imread(img_file_name)
+        img_resize = cv.resize(img, (sample_width, sample_height))
+        base_name = os.path.basename(img_file_name)
+        cv.imwrite(output_folder + base_name, img_resize)
 
-#img, affine = align(img1, img2, mask, mask, descriptor = cv.ORB_create(), MIN_MATCH_COUNT = 4, knn_match_ratio = 0.8, debug = False)
-
-
-# for file_name in glob.glob(predict_path + "/*.tif"):   
-#     print("filename", file_name)     
-#     img2 = cv.imread(file_name, cv.IMREAD_GRAYSCALE)
-#     img, affine = align(img1, img2, mask, mask, descriptor = cv.AKAZE_create(), MIN_MATCH_COUNT = 4, knn_match_ratio_thr = 0.8, debug = False)
-#     head, tail = ntpath.split(file_name)    
-#     cv.imwrite(save_path_aligned + tail, img)
-
-#     ori = cv.imread(file_name, cv.IMREAD_GRAYSCALE)    
-#     img = ori[0: ori.shape[1]-BOTTOM_CUT, 0:ori.shape[0]]
-#     matching(roi_sample, img)
-
-#     img = remove_particles(ori)    
-
-#     kernel = np.ones((5,5),np.uint8)
-#     #img = cv.morphologyEx(img, cv.MORPH_OPEN, kernel)
-
-    
-#     img, affine = align(sample_img, img, roi_sample, roi_applied)    
-
-#     head, tail = ntpath.split(file_name)    
-#     cv.imwrite(save_path_binarized + tail, img)
-
-#     image_affined = cv.warpAffine(ori, affine,  (ori.shape[1],ori.shape[0]))   
-#     cv.imwrite(save_path_aligned + tail, image_affined)
+        img_height = img.shape[0]    
+        img_width = img.shape[1]    
         
-#align_sample_folder(align_folder = 'training_nature_fine_align\\', sample_file_name = 'training_nature_fine\\024.bmp')
-#align_sample_folder(input_folder = 'training2k\\', output_folder = 'training2k_align\\', sample_file_name = 'training2k\\egfr_F_R_oly_2X_3.tif')
+        fx = img_width/sample_width
+        fy = img_height/sample_height
+        out_txt_file = open(output_folder + base_name.replace(img_type,".txt"), "w")
+        with open(name) as f:                    
+            lines = f.readlines()       
+            for line in lines:
+                words = line.split()            
+                y = int(float(words[1]))/fy         
+                x = int(float(words[0]))/fx
+                out_txt_file.writelines(f"{x} {y}\n")            
+        out_txt_file.close()
 
+# mask = np.zeros(img1.shape[:2], dtype="uint8") 
+# mask = cv.rectangle(mask, (0, 0), (img1.shape[1],img1.shape[0] - 200),255, -1)
+# align_sample_folder(input_folder = 'G:\\My Drive\\Research\\iMorphSharedByHai\\Datasets\\Droso_nature_paper\\', 
+#                 output_folder = 'G:\\My Drive\\Research\\iMorph\\CodeHandcraftFeatures\\KeypointMatching\\training_nature_fine_align\\', 
+#                 sample_file_name = 'G:\\My Drive\\Research\\iMorphSharedByHai\\Datasets\\Droso_nature_paper\\024.bmp', use_bin_img= False)
+
+
+# img1 = cv.imread('G:\\My Drive\\Research\\iMorphSharedByHai\\Datasets\\Droso_nature_paper\\024.bmp',cv.IMREAD_GRAYSCALE) # trainImage
+# img2 = cv.imread('G:\\My Drive\\Research\\iMorphSharedByHai\\Datasets\\Droso_nature_paper\\001.bmp',cv.IMREAD_GRAYSCALE)          # queryImage
+
+# img, affine = align(img1, img2, mask, mask, descriptor = cv.ORB_create(), MIN_MATCH_COUNT = 4, debug = True)

@@ -6,17 +6,17 @@
         "cell_count" : 8,
         "patchSize" : 50
     },
-    "HOG" : {
+    "R-HOG" : {
         "winSize" : 16,
         "blockSize" : 8,
         "blockStride" : 2,
         "cellSize" : 4,
-        "nbins" : 3
+        "nbins" : 9
     },
-    "CHOG": {
-        "radius" : 30,
+    "C-HOG": {
+        "radius" : 20,
         "pixelDistance" : 1,
-        "blockCount" : 1,
-        "binCount" : 9
+        "blockCount" : 8,
+        "binCount" : 18
     }
 }
