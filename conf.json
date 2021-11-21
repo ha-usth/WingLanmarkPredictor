@@ -1,0 +1,22 @@
+{
+    "blur_size": 9,
+    "LBP" : {
+        "numPoints" : 16,
+        "radius" : 3,
+        "cell_count" : 8,
+        "patchSize" : 50
+    },
+    "R-HOG" : {
+        "winSize" : 16,
+        "blockSize" : 8,
+        "blockStride" : 2,
+        "cellSize" : 4,
+        "nbins" : 9
+    },
+    "C-HOG": {
+        "radius" : 20,
+        "pixelDistance" : 1,
+        "blockCount" : 8,
+        "binCount" : 18
+    }
+}
