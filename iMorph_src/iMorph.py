@@ -439,9 +439,10 @@ class Ui_iMorph(object):
                 try:
                     index += 1
                     x , y = point.x , point.y
-                    cv2.circle(img, (x, y), 7, (255, 0, 0), 4)
+                    cv2.circle(img, (x, y), 7, (0, 0, 0), 4)
                     cv2.putText(img, str(index), (x + 10, y + 10), cv2.FONT_HERSHEY_SIMPLEX,  1, (255, 0, 0), 2, cv2.LINE_AA)
-                    cv2.rectangle(img, (x - int(self.windowSizeValue), y - int(self.windowSizeValue)), (x + int(self.windowSizeValue), y + int(self.windowSizeValue)), (255, 0, 0), 2)
+                    #cv2.rectangle(img, (x - int(self.windowSizeValue), y - int(self.windowSizeValue)), (x + int(self.windowSizeValue), y + int(self.windowSizeValue)), (255, 0, 0), 2)
+                    cv2.circle(img, (x, y), int(self.windowSizeValue), (0, 0, 0), 4)
                 except:
                     index -= 1
         self.drawImage(img, points)
@@ -529,17 +530,17 @@ class Ui_iMorph(object):
         self.groupBox_2.setTitle(_translate("iMorph", "Prediction data"))
         self.loadPredict.setText(_translate("iMorph", "Load"))
         self.predict.setText(_translate("iMorph", "Predict"))
-        self.groupBox_3.setTitle(_translate("iMorph", "Paramaters"))
+        self.groupBox_3.setTitle(_translate("iMorph", "Parameters"))
         self.groupBox_4.setTitle(_translate("iMorph", "Border size of key point matching region used for image alignment"))
         self.label.setText(_translate("iMorph", "Top"))
         self.label_2.setText(_translate("iMorph", "Bottom"))
         self.label_3.setText(_translate("iMorph", "Left"))
         self.label_4.setText(_translate("iMorph", "Right"))
         self.label_5.setText(_translate("iMorph", "Feature type"))
-        self.label_6.setText(_translate("iMorph", "Candidate method"))
-        self.label_7.setText(_translate("iMorph", "Windows size"))
-        self.label_8.setText(_translate("iMorph", "Number of random points"))
-        self.showCenter.setText(_translate("iMorph", "Show center point"))
+        self.label_6.setText(_translate("iMorph", "Candidate points"))
+        self.label_7.setText(_translate("iMorph", "ROI radius"))
+        self.label_8.setText(_translate("iMorph", "Number of Random or \nGaussian points"))
+        self.showCenter.setText(_translate("iMorph", "Show ROIs"))
         self.save.setText(_translate("iMorph", "Save"))
 
     def training(self):
