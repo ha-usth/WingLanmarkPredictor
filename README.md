@@ -25,13 +25,15 @@ containing the positions of annotated landmark classes.
 (b) Choose an image in the sample set as the alignment target image and select pre-process button to align all other
 images in the sample set with the target image.
 ## Learning stage:
+
 2. Select feature type: the utility supports 5 feature descriptors: SURF, Haar-like, LBP, R-HOG, and C-HOG
 3. Select the candidate landmarks proposition method from 3 options: Key-point extraction, Random sampling, or Gaussian
 sampling.
 4. Select the sizes of the ROI.
 5. Select the number of random points if the “Random” or "Gaussian" method is used in step 3.
 6. Train to extract sample feature vectors from sample images
-### Prediction stage:
+   
+## Prediction stage:
 7. Load the predict data: locate the folder including images to predict landmarks.
 8. Predict: the tool predicts the location of landmark classes for each image in the prediction folder and saves the predicted
 landmark positions into the corresponding coordinate text files.
