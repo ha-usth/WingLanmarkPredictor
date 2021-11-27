@@ -3,8 +3,8 @@ This project studies methods on automatic morphometric landmark detections
 
 In this repository, you can find following folders:
 
-* Datasets: 5 datasets for benchmarking purposes
-* Vandaele_src: We reimplemented the source code in python for the method of Vandaele et al. [[1]](#1) 
+* Datasets: 5 public datasets for benchmarking purposes
+* Vandaele_src: reimplemented the source code in Python for the method of Vandaele et al. [[1]](#1) 
 * iMorph_src: source code of our framework and iMorph utility
 
 # Download iMorph
@@ -42,6 +42,22 @@ image. If there exists the corresponding coordinate text file, the landmarks are
 positions of landmark classes. In case the user does not satisfy, they can tune landmark classes by dragging and dropping them
 to the desired positions, then click the "Save" button to overwrite the coordinate text file.
 
+## How to build iMorph
+Go to iMorph_src folder then:
+### Makesure python 3 is available the setup the python libraries with below command
+`pip install -r requirements.txt`
+
+### Setup qttools5-dev-tools
+#### in Windows
+`pip install -r requirements.txt`
+`pip install PyQt5`
+`pip install PyQt5-tools`
+#### in Ubuntu (linux)
+`sudo apt-get install pyqt5-dev-tools`
+`sudo apt-get install qttools5-dev-tools`
+
+### Build the executable file
+`pyinstaller --onefile  --windowed iMorph.py`
 
 ## References
 <a id="1">[1]</a> 
