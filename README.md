@@ -49,11 +49,16 @@ Go to iMorph_src folder then:
 
 ### Setup qttools5-dev-tools
 #### in Windows
+
 `pip install -r requirements.txt`
+
 `pip install PyQt5`
+
 `pip install PyQt5-tools`
 #### in Ubuntu (linux)
+
 `sudo apt-get install pyqt5-dev-tools`
+
 `sudo apt-get install qttools5-dev-tools`
 
 ### Build the executable file
