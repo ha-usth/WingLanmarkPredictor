@@ -42,7 +42,7 @@ image. If there exists the corresponding coordinate text file, the landmarks are
 positions of landmark classes. In case the user does not satisfy, they can tune landmark classes by dragging and dropping them
 to the desired positions, then click the "Save" button to overwrite the coordinate text file.
 
-## How to build iMorph
+# How to build iMorph
 Go to iMorph_src folder then:
 ### Makesure python 3 is available the setup the python libraries with below command
 `pip install -r requirements.txt`
