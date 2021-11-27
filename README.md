@@ -44,7 +44,7 @@ to the desired positions, then click the "Save" button to overwrite the coordina
 
 # How to build iMorph
 Go to iMorph_src folder then:
-### Makesure python 3 is available the setup the python libraries with below command
+### Make sure python 3 is available then setup the python libraries with below command
 `pip install -r requirements.txt`
 
 ### Setup qttools5-dev-tools
