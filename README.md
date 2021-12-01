@@ -7,8 +7,39 @@ In this repository, you can find following folders:
 * Vandaele_src: reimplemented the source code in Python for the method of Vandaele et al. [[1]](#1) 
 * iMorph_src: source code of our framework and iMorph utility
 
-# Download iMorph
-Our framework was intergrated into iMorph utility whose pre-build executable files can be found [here](https://drive.google.com/drive/folders/1bJopUqd8p2xvp6Wr5J6yC8mOQChQmgP6)
+To use iMorph, you can execute the [pre-build files](https://github.com/ha-usth/WingLanmarkPredictor/releases), run from source code, or build from scatch.
+# How to run iMorph from source code
+Using terminal (Windows, MacOS, Linux), go into iMorph_src, and run following commands.
+
+`python3 -m venv ~/Envs/imorph`
+
+`source ~/Envs/imorph/bin/activate`
+
+`pip install -r requirements.txt`
+
+`python iMorph.py`
+
+# How to build iMorph
+Go to iMorph_src folder then:
+### Make sure python 3 is available then setup the python libraries with below command
+`pip install -r requirements.txt`
+
+### Setup qttools5-dev-tools
+#### in Windows
+
+`pip install -r requirements.txt`
+
+`pip install PyQt5`
+
+`pip install PyQt5-tools`
+#### in Ubuntu (linux)
+
+`sudo apt-get install pyqt5-dev-tools`
+
+`sudo apt-get install qttools5-dev-tools`
+
+### Build the executable file
+`pyinstaller --onefile  --windowed iMorph.py`
 # How to use iMorph
 
 ![GUI of iMorph](./gui.png)
@@ -42,27 +73,6 @@ image. If there exists the corresponding coordinate text file, the landmarks are
 positions of landmark classes. In case the user does not satisfy, they can tune landmark classes by dragging and dropping them
 to the desired positions, then click the "Save" button to overwrite the coordinate text file.
 
-# How to build iMorph
-Go to iMorph_src folder then:
-### Make sure python 3 is available then setup the python libraries with below command
-`pip install -r requirements.txt`
-
-### Setup qttools5-dev-tools
-#### in Windows
-
-`pip install -r requirements.txt`
-
-`pip install PyQt5`
-
-`pip install PyQt5-tools`
-#### in Ubuntu (linux)
-
-`sudo apt-get install pyqt5-dev-tools`
-
-`sudo apt-get install qttools5-dev-tools`
-
-### Build the executable file
-`pyinstaller --onefile  --windowed iMorph.py`
 
 ## References
 <a id="1">[1]</a> 
