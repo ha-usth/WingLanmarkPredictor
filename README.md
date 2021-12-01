@@ -74,6 +74,6 @@ positions of landmark classes. In case the user does not satisfy, they can tune 
 to the desired positions, then click the "Save" button to overwrite the coordinate text file.
 
 
-## References
+# References
 <a id="1">[1]</a> 
 Vandaele, R., Aceto, J., Muller, M. et al. Landmark detection in 2D bioimages for geometric morphometrics: a multi-resolution tree-based approach. Sci Rep 8, 538 (2018). https://doi.org/10.1038/s41598-017-18993-5
