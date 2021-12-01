@@ -7,7 +7,7 @@ In this repository, you can find following folders:
 * Vandaele_src: reimplemented the source code in Python for the method of Vandaele et al. [[1]](#1) 
 * iMorph_src: source code of our framework and iMorph utility
 
-To use iMorph, you can execute the [pre-build files](https://github.com/ha-usth/WingLanmarkPredictor/releases), run from source code, or build from scatch.
+To use iMorph, you can execute the [pre-build files](https://github.com/ha-usth/WingLanmarkPredictor/releases), run the source code directly, or build the executable files from the source code.
 # How to run iMorph from source code
 Using terminal (Windows, MacOS, Linux), go into iMorph_src, and run following commands.
 
